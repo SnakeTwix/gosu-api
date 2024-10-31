@@ -36,11 +36,9 @@ func NewClient(clientId int, clientSecret string) (Client, error) {
 
 	err := client.fetchToken()
 	if err != nil {
-		fmt.Println(err)
 		return Client{}, err
 	}
 
-	fmt.Println(client.authToken)
 	return client, nil
 }
 
