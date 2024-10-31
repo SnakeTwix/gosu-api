@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/SnakeTwix/gosu-api/internal/util"
 	"io"
 	"net/http"
-	"osu-api/internal/util"
 )
 
 const BaseUrl = "https://osu.ppy.sh/api/v2"

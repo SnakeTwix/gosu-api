@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"osu-api/structs"
+	"github.com/SnakeTwix/gosu-api/structs"
 	"strconv"
 )
 

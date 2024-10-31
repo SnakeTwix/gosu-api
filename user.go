@@ -1,6 +1,6 @@
 package api
 
-import "osu-api/structs"
+import "github.com/SnakeTwix/gosu-api/structs"
 
 // GetUserQuery if UserId is provided, then it is used, if not then username. (Currently only userId)
 type GetUserQuery struct {
