@@ -7,6 +7,7 @@ import (
 	"github.com/SnakeTwix/gosu-api/internal/util"
 	"io"
 	"net/http"
+	"time"
 )
 
 const BaseUrl = "https://osu.ppy.sh/api/v2"
@@ -15,20 +16,35 @@ type Client struct {
 	url          string
 	clientSecret string
 	clientId     int
-	authToken    *string
+	authToken    *token
 	httpClient   *http.Client
 }
 
-func New(clientId int, clientSecret string) Client {
-	return Client{
+type token struct {
+	access    string
+	refresh   *string
+	expiresAt time.Time
+}
+
+func NewClient(clientId int, clientSecret string) (Client, error) {
+	client := Client{
 		url:          BaseUrl,
 		clientSecret: clientSecret,
 		clientId:     clientId,
 		httpClient:   http.DefaultClient,
 	}
+
+	err := client.fetchToken()
+	if err != nil {
+		fmt.Println(err)
+		return Client{}, err
+	}
+
+	fmt.Println(client.authToken)
+	return client, nil
 }
 
-func (c *Client) GetToken() error {
+func (c *Client) fetchToken() error {
 	// TODO: get rid of body Map mappings
 	content := map[string]any{
 		"client_id":     c.clientId,
@@ -47,15 +63,21 @@ func (c *Client) GetToken() error {
 		return err
 	}
 
+	if response.StatusCode != http.StatusOK {
+		return errors.New("token request failed")
+	}
+
 	var tokenMap map[string]any
-	err = json.NewDecoder(response.Body).Decode(&tokenMap)
+	decoder := json.NewDecoder(response.Body)
+	decoder.UseNumber()
+	err = decoder.Decode(&tokenMap)
 	if err != nil {
 		return err
 	}
 
 	accessToken, ok := tokenMap["access_token"]
 	if !ok {
-		return err
+		return errors.New("no access_token when requesting auth")
 	}
 
 	stringToken, ok := accessToken.(string)
@@ -63,7 +85,30 @@ func (c *Client) GetToken() error {
 		return errors.New("accessToken isn't string")
 	}
 
-	c.authToken = &stringToken
+	expiresIn, ok := tokenMap["expires_in"]
+	if !ok {
+		return errors.New("no expires_in when requesting auth")
+	}
+
+	expiresJsonNumber, ok := expiresIn.(json.Number)
+	if !ok {
+		return errors.New("expires_in isn't number string")
+	}
+
+	expiresNumber, err := expiresJsonNumber.Int64()
+	if err != nil {
+		return errors.New("expires_in isn't json int")
+	}
+
+	c.authToken = &token{
+		access:  stringToken,
+		refresh: nil,
+		expiresAt: time.Now().
+			// Just in case it timeouts or something
+			Add(-time.Minute * 5).
+			Add(time.Second * time.Duration(expiresNumber)),
+	}
+
 	return nil
 }
 
@@ -78,8 +123,19 @@ func (c *Client) getRequestV2(method string, url string, body io.Reader) (*http.
 		return nil, errors.New("no auth token specified")
 	}
 
-	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", *c.authToken))
+	// If the token has expired
+	if c.authToken.expiresAt.Before(time.Now()) {
+		err = c.fetchToken()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.authToken.access))
 
 	return request, nil
+}
 
+func (c *Client) Send(request *http.Request) (*http.Response, error) {
+	return c.httpClient.Do(request)
 }

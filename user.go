@@ -11,7 +11,7 @@ type GetUserQuery struct {
 
 //func (c *Client) GetUser(query GetUserQuery) (*structs.UserExtended, error) {
 //	if query.Id == 0 {
-//		return nil, errors.New("no user id provided")
+//		return nil, errors.NewClient("no user id provided")
 //	}
 //
 //	var requestUrlBuilder strings.Builder

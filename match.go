@@ -50,7 +50,7 @@ func (c *Client) GetMatch(query GetMatchQuery) (*MatchData, error) {
 
 	request.URL.RawQuery = q.Encode()
 
-	response, err := c.httpClient.Do(request)
+	response, err := c.Send(request)
 	if err != nil {
 		return nil, err
 	}
