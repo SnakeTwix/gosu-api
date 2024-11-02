@@ -19,6 +19,7 @@ type GetMatchResponse struct {
 }
 
 type GetMatchQuery struct {
+	// Required
 	MatchId int
 	Before  int
 	After   int

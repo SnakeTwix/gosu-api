@@ -8,10 +8,14 @@ type BeatmapPack struct {
 	Name            string    `json:"name"`
 	NoDiffReduction bool      `json:"no_diff_reduction"`
 	RulesetId       int       `json:"ruleset_id"`
-	// Maybe needs typing
-	Tag string `json:"tag"`
+	Tag             string    `json:"tag"`
+	Url             string    `json:"url"`
 
-	Url string `json:"url"`
+	Beatmapsets        []BeatmapSet `json:"beatmapsets"`
+	UserCompletionData *struct {
+		BeatmapSetIds []int `json:"beatmap_set_ids"`
+		Completed     bool  `json:"completed"`
+	} `json:"user_completion_data"`
 }
 
 type BeatmapPackType string

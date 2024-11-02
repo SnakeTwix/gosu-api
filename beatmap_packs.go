@@ -2,7 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/SnakeTwix/gosu-api/structs"
+	"strconv"
 )
 
 type GetBeatmapPacksResponse struct {
@@ -34,6 +37,7 @@ func (c *Client) GetBeatmapPacks(query GetBeatmapPacksQuery) (*GetBeatmapPacksRe
 	if query.CursorString != "" {
 		q.Set("cursor_string", query.CursorString)
 	}
+
 	request.URL.RawQuery = q.Encode()
 
 	response, err := c.Send(request)
@@ -49,4 +53,43 @@ func (c *Client) GetBeatmapPacks(query GetBeatmapPacksQuery) (*GetBeatmapPacksRe
 	}
 
 	return &beatmapPacks, nil
+}
+
+type GetBeatmapPackQuery struct {
+	Pack       string
+	LegacyOnly int
+}
+
+func (c *Client) GetBeatmapPack(query GetBeatmapPackQuery) (*structs.BeatmapPack, error) {
+	if query.Pack == "" {
+		return nil, errors.New("no pack tag provided")
+	}
+
+	request, err := c.getRequestV2("GET", fmt.Sprintf("/beatmaps/packs/%s", query.Pack), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	q := request.URL.Query()
+
+	if query.LegacyOnly == 1 || query.LegacyOnly == 0 {
+		legacy := strconv.Itoa(query.LegacyOnly)
+		q.Set("legacy_only", legacy)
+	}
+
+	request.URL.RawQuery = q.Encode()
+
+	response, err := c.Send(request)
+	if err != nil {
+		return nil, err
+	}
+
+	var beatmapPack structs.BeatmapPack
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&beatmapPack)
+	if err != nil {
+		return nil, err
+	}
+
+	return &beatmapPack, nil
 }
