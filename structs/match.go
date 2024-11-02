@@ -13,7 +13,7 @@ type MatchEvent struct {
 type MatchEventDetail struct {
 	Type MatchEventType `json:"type"`
 
-	// Text seems to be only present on MatchEventMatchCreated
+	// Text seems to be only present on MatchEventOther
 	Text *string `json:"text"`
 }
 

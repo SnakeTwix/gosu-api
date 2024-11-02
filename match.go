@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-type MatchData struct {
+type GetMatchResponse struct {
 	Match  structs.Match        `json:"match"`
 	Events []structs.MatchEvent `json:"events"`
 
@@ -25,7 +25,7 @@ type GetMatchQuery struct {
 	Limit   int
 }
 
-func (c *Client) GetMatch(query GetMatchQuery) (*MatchData, error) {
+func (c *Client) GetMatch(query GetMatchQuery) (*GetMatchResponse, error) {
 	if query.MatchId == 0 {
 		return nil, errors.New("no id provided for match query")
 	}
@@ -55,7 +55,7 @@ func (c *Client) GetMatch(query GetMatchQuery) (*MatchData, error) {
 		return nil, err
 	}
 
-	var matchData MatchData
+	var matchData GetMatchResponse
 	decoder := json.NewDecoder(response.Body)
 	decoder.UseNumber()
 	err = decoder.Decode(&matchData)
@@ -66,7 +66,7 @@ func (c *Client) GetMatch(query GetMatchQuery) (*MatchData, error) {
 	return &matchData, nil
 }
 
-func (c *Client) GetFullMatch(id int) (*MatchData, error) {
+func (c *Client) GetFullMatch(id int) (*GetMatchResponse, error) {
 	matchQuery := GetMatchQuery{MatchId: id}
 
 	matchData, err := c.GetMatch(matchQuery)
